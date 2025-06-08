@@ -6,6 +6,7 @@ This utility automates the process of re-downloading failed osu! beatmap files b
 
 1. **Failed Beatmaps Folder:**
    - Place all failed `.osz` files in the `failed` folder, located in the same directory as `main.py`. In osu!, the failed import folder is found in the Songs directory and is named `failed`. If you do not have a `failed` folder, it means none of your imports have failed.
+   - **Note:** You can either manually create the `failed` folder or simply run the program once; it will automatically create the folder if it does not exist.
 
 2. **Extracting Beatmap IDs:**
    - The program scans the `failed` folder for `.osz` files and extracts the numeric beatmap IDs from their filenames.
