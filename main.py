@@ -8,6 +8,10 @@ from pathlib import Path
 failed_folder = Path(__file__).parent / "failed"
 downloading_file = Path(__file__).parent / "downloading.txt"
 
+# Ensure the failed folder exists
+if not failed_folder.exists():
+    failed_folder.mkdir(parents=True, exist_ok=True)
+
 # Regex to extract number from filename
 number_re = re.compile(r"(\d+)")
 
