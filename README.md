@@ -61,7 +61,7 @@ The script will automatically create and use the following folders and files aft
 
 1. Ensure Python 3 is installed on your system
 2. Create a dedicated folder for this script
-3. Place `main.py` in that folder
+3. Place `failedbeatmapdownloader.py` in that folder
 4. Place your failed `.osz` files in the `failed` folder (auto-created on first run)
 5. Run the script:
    ```sh
