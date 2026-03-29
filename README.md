@@ -1,6 +1,6 @@
 # Beatmap Downloader
 
-This utility automates the process of re-downloading osu! beatmaps by directly downloading them from your choice of source. It intelligently handles bot-blocks and avoids re-downloading files that already exist.
+This utility automates the process of re-downloading osu! beatmaps by directly downloading them from your choice of source. It intelligently handles IP-blocks and avoids re-downloading files that already exist.
 
 ## Important: Folder Setup
 
@@ -35,7 +35,7 @@ The script will automatically create and use the following folders and files aft
 4. **Download Process:**
    - The program downloads beatmaps directly to the `downloads` folder
    - **Progress Tracking:** Real-time visual progress bar showing download completion percentage
-   - **Bot-Block Detection:** Files smaller than 20KB are detected as likely IP-blocked and automatically deleted
+   - **IP-Block Detection:** Files smaller than 20KB are detected as likely IP-blocked and automatically deleted
    - **Duplicate Avoidance:** Files that already exist in the `downloads` folder and are valid (≥20KB) are skipped
    - A delay of 1 second is added between downloads
 
@@ -47,7 +47,7 @@ The script will automatically create and use the following folders and files aft
      - Press any key to exit immediately without waiting
 
 6. **Handling IP Blocks:**
-   - **What are IP blocks?** The download services use IP-based rate limiting to prevent bot abuse. Downloads smaller than 20KB indicate your IP has been temporarily blocked.
+   - **What are IP blocks?** The download services use IP-based rate limiting to prevent IP abuse. Downloads smaller than 20KB indicate your IP has been temporarily blocked.
    - **BeatConnect:** Simply changing your IP address will bypass the block. You can use:
      - A VPN service
      - Reconnecting your router (if you have a dynamic IP)
