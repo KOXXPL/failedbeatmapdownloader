@@ -201,7 +201,7 @@ else:
         if filename.exists():
             file_size = filename.stat().st_size
             if file_size < min_file_size:
-                print(f" - File too small ({file_size} bytes), likely bot-blocked. Deleting...")
+                print(f" - File too small ({file_size} bytes), likely IP-blocked. Deleting...")
                 filename.unlink()
                 failed += 1
             else:
