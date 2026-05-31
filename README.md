@@ -2,6 +2,8 @@
 
 This utility automates the process of re-downloading osu! beatmaps by directly downloading them from your choice of source. It intelligently handles IP-blocks and avoids re-downloading files that already exist.
 
+**Cross-Platform:** Fully compatible with Windows, Linux, and macOS.
+
 ## Important: Folder Setup
 
 **This script creates and manages its own files and folders. It is recommended to keep it in a dedicated folder separate from other files.**
@@ -35,8 +37,8 @@ The script will automatically create and use the following folders and files aft
 4. **Download Process:**
    - The program downloads beatmaps directly to the `downloads` folder
    - **Progress Tracking:** Real-time visual progress bar showing download completion percentage
-   - **IP-Block Detection:** Files smaller than 20KB are detected as likely IP-blocked and automatically deleted
-   - **Duplicate Avoidance:** Files that already exist in the `downloads` folder and are valid (≥20KB) are skipped
+   - **IP-Block Detection:** Files smaller than 30KB are detected as likely IP-blocked and automatically deleted
+   - **Duplicate Avoidance:** Files that already exist in the `downloads` folder and are valid (≥30KB) are skipped
    - A delay of 1 second is added between downloads
 
 5. **Download Summary:**
@@ -47,7 +49,7 @@ The script will automatically create and use the following folders and files aft
      - Press any key to exit immediately without waiting
 
 6. **Handling IP Blocks:**
-   - **What are IP blocks?** The download services use IP-based rate limiting to prevent IP abuse. Downloads smaller than 20KB indicate your IP has been temporarily blocked.
+   - **What are IP blocks?** The download services use IP-based rate limiting to prevent IP abuse. Downloads smaller than 30KB indicate your IP has been temporarily blocked.
    - **BeatConnect:** Simply changing your IP address will bypass the block. You can use:
      - A VPN service
      - Reconnecting your router (if you have a dynamic IP)
@@ -65,7 +67,7 @@ The script will automatically create and use the following folders and files aft
 4. Place your failed `.osz` files in the `failed` folder (auto-created on first run)
 5. Run the script:
    ```sh
-   python main.py
+   python failedbeatmapdownloader.py
    ```
 6. Select your preferred download source
 7. Wait for downloads to complete and check the results in the `downloads` folder

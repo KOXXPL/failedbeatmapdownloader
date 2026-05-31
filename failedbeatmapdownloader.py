@@ -5,12 +5,20 @@ import time
 import webbrowser
 import os
 import urllib.request
+import platform
 from pathlib import Path
+from threading import Thread
+from queue import Queue
 
 # Paths
 failed_folder = Path(__file__).parent / "failed"
 downloads_folder = Path(__file__).parent / "downloads"
 downloading_file = Path(__file__).parent / "downloading.txt"
+
+# Platform detection
+SYSTEM = platform.system()
+IS_WINDOWS = SYSTEM == "Windows"
+IS_LINUX = SYSTEM == "Linux"
 
 # Ensure the failed folder exists
 if not failed_folder.exists():
@@ -19,6 +27,31 @@ if not failed_folder.exists():
 # Ensure the downloads folder exists
 if not downloads_folder.exists():
     downloads_folder.mkdir(parents=True, exist_ok=True)
+
+def clear_screen():
+    """Clear the terminal screen in a cross-platform way."""
+    os.system('cls' if IS_WINDOWS else 'clear')
+
+def get_single_key_input(timeout=None):
+    """
+    Get a single key input in a cross-platform way.
+    Returns the key character or None if timeout expires.
+    """
+    if IS_WINDOWS:
+        import msvcrt
+        if msvcrt.kbhit():
+            key = msvcrt.getch()
+            try:
+                return key.decode('utf-8', errors='ignore')
+            except:
+                return None
+        return None
+    else:
+        # For Linux/Unix, use stdin with timeout
+        import select
+        if select.select([sys.stdin], [], [], 0)[0]:
+            return sys.stdin.read(1)
+        return None
 
 def display_menu(selected=0):
     """Display the download source menu."""
@@ -62,66 +95,103 @@ def download_beatmap(url, beatmap_id, progress_callback=None):
         return False
 
 def get_menu_selection(timeout=5):
-    """Get user menu selection with timeout and arrow key support (Windows)."""
-    import msvcrt
-    
+    """Get user menu selection with timeout and keyboard support (cross-platform)."""
     selected = 0
-    last_selected = 0
-    user_interacted = False
-    start_time = time.time()
-    
-    display_menu(selected)
     source_names = ["BeatConnect", "Nerinyan"]
     
-    while True:
-        if not user_interacted:
+    display_menu(selected)
+    start_time = time.time()
+    
+    # Enable non-blocking input on Linux
+    if not IS_WINDOWS:
+        import tty
+        import termios
+        old_settings = termios.tcgetattr(sys.stdin)
+        try:
+            tty.setraw(sys.stdin.fileno())
+        except:
+            pass
+    
+    try:
+        while True:
             remaining = timeout - (time.time() - start_time)
             
             if remaining <= 0:
-                print("Auto-selecting: BeatConnect (default)")
-                return selected
-            
-            sys.stdout.write(f"\rPress 1-2 or use arrow keys, then press Enter. Auto-selecting the recommended option in {int(remaining)}s...")
-        else:
-            sys.stdout.write(f"\rSelected: {source_names[selected]} | Press Enter to confirm, use arrows to select.")
-        
-        sys.stdout.flush()
-        
-        if msvcrt.kbhit():
-            user_interacted = True
-            key = msvcrt.getch()
-            
-            try:
-                key_char = key.decode('utf-8', errors='ignore')
-            except:
-                key_char = chr(key[0]) if key else ''
-            
-            # Numeric keys 1 or 2
-            if key_char == '1':
-                print("\n")
+                print("\nAuto-selecting: BeatConnect (default)")
                 return 0
-            elif key_char == '2':
-                print("\n")
-                return 1
-            # Enter key
-            elif key_char == '\r':
-                print("\n")
-                return selected
-            # Arrow keys (Windows special key sequence)
-            elif key == b'\xe0':
-                next_key = msvcrt.getch()
-                if next_key == b'H':  # Up arrow
-                    selected = (selected - 1) % 2
-                elif next_key == b'P':  # Down arrow
-                    selected = (selected + 1) % 2
-                
-                # Redraw menu if selection changed
-                if selected != last_selected:
-                    os.system('cls')
-                    display_menu(selected)
-                    last_selected = selected
-        
-        time.sleep(0.05)
+            
+            # Display status
+            sys.stdout.write(f"\rPress 1-2 or arrows, then Enter to confirm. Auto-selecting in {int(remaining)}s...")
+            sys.stdout.flush()
+            
+            # Check for input
+            if IS_WINDOWS:
+                import msvcrt
+                if msvcrt.kbhit():
+                    key = msvcrt.getch()
+                    try:
+                        key_char = key.decode('utf-8', errors='ignore')
+                    except:
+                        key_char = None
+                    
+                    if key_char == '1':
+                        print("\n")
+                        return 0
+                    elif key_char == '2':
+                        print("\n")
+                        return 1
+                    elif key_char in ('\r', '\n'):
+                        print("\n")
+                        return selected
+                    elif key == b'\xe0':  # Arrow key prefix on Windows
+                        next_key = msvcrt.getch()
+                        if next_key == b'H':  # Up arrow
+                            selected = (selected - 1) % 2
+                            clear_screen()
+                            display_menu(selected)
+                        elif next_key == b'P':  # Down arrow
+                            selected = (selected + 1) % 2
+                            clear_screen()
+                            display_menu(selected)
+            else:
+                # Linux/Unix input handling
+                import select
+                if select.select([sys.stdin], [], [], 0.05)[0]:
+                    char = sys.stdin.read(1)
+                    if char == '1':
+                        print("\n")
+                        return 0
+                    elif char == '2':
+                        print("\n")
+                        return 1
+                    elif char in ('\r', '\n'):
+                        print("\n")
+                        return selected
+                    elif char == '\x1b':  # Escape sequence for arrow keys
+                        # Read the rest of the escape sequence
+                        if select.select([sys.stdin], [], [], 0.1)[0]:
+                            char = sys.stdin.read(1)
+                            if char == '[':
+                                if select.select([sys.stdin], [], [], 0.1)[0]:
+                                    char = sys.stdin.read(1)
+                                    if char == 'A':  # Up arrow
+                                        selected = (selected - 1) % 2
+                                        clear_screen()
+                                        display_menu(selected)
+                                    elif char == 'B':  # Down arrow
+                                        selected = (selected + 1) % 2
+                                        clear_screen()
+                                        display_menu(selected)
+            
+            time.sleep(0.05)
+    finally:
+        # Restore terminal settings on Linux
+        if not IS_WINDOWS:
+            try:
+                import termios
+                termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
+            except:
+                pass
 
 # Regex to extract number from filename
 number_re = re.compile(r"(\d+)")
@@ -167,7 +237,7 @@ else:
     downloaded = 0
     skipped = 0
     failed = 0
-    min_file_size = 20480  # 20 KB in bytes
+    min_file_size = 30720  # 30 KB in bytes
     
     for idx, (number, file) in enumerate(osz_files, 1):
         url = f"{base_url}{number}"
@@ -232,21 +302,56 @@ else:
     print(f"{RED}{BOLD}✗ Failed: {failed}{RESET}")
     print("="*60)
     
-    # Auto-close countdown
-    import msvcrt
+    # Auto-close countdown (cross-platform)
     countdown = 10
-    
     start_time = time.time()
-    while countdown > 0:
-        remaining = 10 - int(time.time() - start_time)
-        if remaining <= 0:
-            break
-        
-        sys.stdout.write(f"\rClosing in {remaining} seconds... (press any key to exit now)")
-        sys.stdout.flush()
-        
-        if msvcrt.kbhit():
-            msvcrt.getch()
-            break
-        
-        time.sleep(0.1)
+    
+    # Enable non-blocking input on Linux for countdown
+    if not IS_WINDOWS:
+        import tty
+        import termios
+        old_settings = None
+        try:
+            old_settings = termios.tcgetattr(sys.stdin)
+            tty.setraw(sys.stdin.fileno())
+        except:
+            pass
+    
+    try:
+        while countdown > 0:
+            remaining = 10 - int(time.time() - start_time)
+            if remaining <= 0:
+                break
+            
+            sys.stdout.write(f"\rClosing in {remaining} seconds... (press any key to exit now)")
+            sys.stdout.flush()
+            
+            # Check for key press
+            key_pressed = False
+            if IS_WINDOWS:
+                import msvcrt
+                if msvcrt.kbhit():
+                    msvcrt.getch()
+                    key_pressed = True
+            else:
+                import select
+                if select.select([sys.stdin], [], [], 0.1)[0]:
+                    try:
+                        sys.stdin.read(1)
+                        key_pressed = True
+                    except:
+                        pass
+            
+            if key_pressed:
+                break
+            
+            time.sleep(0.1)
+    finally:
+        # Restore terminal settings on Linux
+        if not IS_WINDOWS and old_settings:
+            try:
+                import termios
+                termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
+            except:
+                pass
+        print("\n")
