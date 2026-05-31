@@ -2,7 +2,7 @@
 
 This utility automates the process of re-downloading osu! beatmaps by directly downloading them from your choice of source. It intelligently handles IP-blocks and avoids re-downloading files that already exist.
 
-**Cross-Platform:** Fully compatible with Windows, Linux, and macOS.
+**Cross-Platform:** Fully compatible with Windows, Linux, and most likely macOS.
 
 ## Important: Folder Setup
 
